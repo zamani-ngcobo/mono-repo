@@ -61,7 +61,7 @@ d-i partman/confirm boolean true
 d-i partman/confirm_nooverwrite boolean true
 
 ### 7. Use local mirror
-d-i mirror/http/hostname string http://mirror.hostafrica.co.za
+d-i mirror/http/hostname string https://mirror.hostafrica.co.za
 d-i mirror/http/directory string /debian
 
 ### 8. Apt setup
@@ -81,3 +81,4 @@ d-i grub-installer/with_other_os boolean false
 
 ### 11. Initialize Final System
 d-i preseed/late_command string in-target wget -P /opt/ https://git.gppos.net/pos/debian/-/raw/master/setup.sh; in-target chmod +x /opt/setup.sh; in-target /opt/setup.sh
+
