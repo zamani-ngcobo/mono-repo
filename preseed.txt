@@ -15,17 +15,15 @@ d-i keyboard-configuration/layoutcode string us
 ### 2. Critical Installation Control
 # Set priority to critical to suppress non-essential questions.
 d-i debconf/priority string critical
-# NEW: Forces the installer to pause at the network prompt, whether DHCP works or fails.
+# If network configuration (DHCP) fails or succeeds, pause at the manual configuration prompt.
 d-i netcfg/dhcp_failed select Configure network manually
 d-i netcfg/dhcp_options select Configure network manually
 
-### 3. Network configuration (The section you want to control)
+### 3. Network configuration
 d-i netcfg/get_hostname string gppos
 d-i netcfg/get_domain string gppos
 d-i netcfg/hostname string gppos
 d-i netcfg/domain string gppos
-# Note: The manual configuration prompt (due to 'Configure network manually') 
-# will pause the process, allowing you to inspect F2/F4/F5 consoles.
 
 ### 4. Account setup
 d-i passwd/root-password-crypted password $6$vGOLmlCw9.FMnLo$RqEZ9UFcrYTCqrsm.S2wqO7jZPh20JbsfSgC5O.qu7aMfSI478OE.4Ug6c8oS2BWuA7tFVXce7i4ChdQcZtdS1
@@ -60,8 +58,9 @@ d-i partman/choose_partition select finish
 d-i partman/confirm boolean true
 d-i partman/confirm_nooverwrite boolean true
 
-### 7. Use local mirror
-d-i mirror/http/hostname string https://mirror.hostafrica.co.za
+### 7. Use Global Debian CDN Mirror (FIXED URL)
+# This is the most reliable URL for unattended installs.
+d-i mirror/http/hostname string **deb.debian.org**
 d-i mirror/http/directory string /debian
 
 ### 8. Apt setup
@@ -81,4 +80,3 @@ d-i grub-installer/with_other_os boolean false
 
 ### 11. Initialize Final System
 d-i preseed/late_command string in-target wget -P /opt/ https://git.gppos.net/pos/debian/-/raw/master/setup.sh; in-target chmod +x /opt/setup.sh; in-target /opt/setup.sh
-
