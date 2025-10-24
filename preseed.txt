@@ -2,13 +2,6 @@
 # NB: 
 Bios Disable Other Boot Options to Force Boot from USB
 Bios Setting > Advanced > CSM Configuration > Other PCI devices [Legacy]
-
-### 1. LOGGING & DEBUG (NEW)
-# Sets log level to debug for detailed troubleshooting
-d-i debian-installer/log-level string debug
-# Ensures logs are saved to the target partition
-d-i finish-install/log-dest string /var/log/installer/
-
 ### Localization
 d-i debian-installer/locale string en_ZA.UTF-8
 d-i localechooser/languagelist select en
@@ -17,35 +10,25 @@ d-i localechooser/countrylist/Africa select ZA
 d-i debian-installer/country string ZA
 d-i keyboard-configuration/xkb-keymap select us
 d-i keyboard-configuration/layoutcode string us
-
-### 2. NETWORK CONFIGURATION (FIXED)
-# The lines below with 'netcfg' only were removed/fixed
+### Network configuration
+netcfg netcfg/get_hostname string gppos
+netcfg netcfg/get_domain string gppos
 d-i netcfg/get_hostname string gppos
 d-i netcfg/get_domain string gppos
-d-i netcfg/hostname string gppos
-d-i netcfg/domain string gppos
-
 ### Account setup
 d-i passwd/root-password-crypted password $6$vGOLmlCw9.FMnLo$RqEZ9UFcrYTCqrsm.S2wqO7jZPh20JbsfSgC5O.qu7aMfSI478OE.4Ug6c8oS2BWuA7tFVXce7i4ChdQcZtdS1
 d-i passwd/user-fullname string user
 d-i passwd/username string user
-d-i passwd/user-password-crypted password $6$zIh7EvZC$ZKXhSGnD2WJGFD8qwjheQLEcTmYV45KtfBDwry16...
-d-i passwd/user-uid string 1000
-d-i passwd/auto-login boolean true
-
-### Clock and Timezone
-d-i clock-setup/utc boolean true
+d-i passwd/user-password-crypted password $6$zIh7EvZC$ZKXhSGnD2WJGFD8qwjheQLEcTmYV45KtfBDwry16KU6oR5BBy9NqqQ4NbMdJ9BG.Cyw/JPfp56pdj9HMqVJp7.
+### Clock and time zone setup
 d-i time/zone string Africa/Johannesburg
 d-i clock-setup/ntp boolean true
-
 ### Partitioning
-d-i partman-auto/disk string /dev/sda
-d-i partman-auto/method string regular
-d-i partman-auto/choose_recipe select atomic
-d-i partman-partitioning/confirm_write_new_label boolean true
-d-i partman/choose_partition select finish
-d-i partman/confirm boolean true
-d-i partman/confirm_nooverwrite boolean true
+d-i partman-auto/init_automatically_partition select biggest_free
+d-i partman-auto/disk string /dev/sda 
+d-i partman-auto/method string lvm
+d-i partman-auto-lvm/guided_size string max
+d-i partman-lvm/device_remove_lvm boolean true
 d-i partman-md/device_remove_md boolean true
 d-i partman-lvm/confirm boolean true
 d-i partman-lvm/confirm_nooverwrite boolean true
@@ -59,33 +42,22 @@ d-i partman-partitioning/confirm_write_new_label boolean true
 d-i partman/choose_partition select finish
 d-i partman/confirm boolean true
 d-i partman/confirm_nooverwrite boolean true
-
 ### Use local mirror
 d-i mirror/http/hostname string https://mirror.hostafrica.co.za
 d-i mirror/http/directory string /debian
-
 ### Apt setup
 d-i apt-setup/services-select multiselect updates
 d-i apt-setup/non-free boolean true
 d-i apt-setup/contrib boolean false
-
-### 3. PACKAGE SELECTION (GUEST ADDITIONS ADDED)
+### Package selection
 popularity-contest popularity-contest/participate boolean false
 tasksel tasksel/first multiselect standard system utilities
 tasksel tasksel/desktop multiselect none
-
-# Added dependencies for building VBox Guest Additions and the Debian package versions
-d-i pkgsel/include string wget git sudo lshw gnome-core net-tools linux-perf zip \
-    build-essential dkms linux-headers-$(uname -r) virtualbox-guest-x11 virtualbox-guest-utils
-
+d-i pkgsel/include string wget git sudo lshw gnome-core net-tools linux-perf zip
 ### Boot loader installation
 d-i grub-installer/only_debian boolean true
 d-i grub-installer/with_other_os boolean false
+d-i grub-installer/bootdev  string default
+### Initialize Final System
+d-i preseed/late_command string in-target wget -P /opt/ https://git.gppos.net/pos/debian/-/raw/master/setup.sh; in-target chmod +x /opt/setup.sh; in-target /opt/setup.sh
 
-### 4. FINAL COMMANDS (NEW LOGGING)
-# This command runs after the installation finishes, right before the reboot.
-d-i preseed/late_command string \
-    # Filter the main syslog file for error, fail, or warning messages (case-insensitive) \
-    # and save the output to the new log file in the installed system's /var/log. \
-    in-target /bin/grep -iE 'error|fail|warning' /var/log/installer/syslog > /target/var/log/preseed-error.log ; \
-    # The VBox packages were installed via pkgsel/include, a reboot is all that's needed.
