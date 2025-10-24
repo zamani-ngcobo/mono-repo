@@ -74,6 +74,8 @@ d-i pkgsel/include string wget git sudo lshw gnome-core net-tools linux-perf zip
 ### 10. Boot loader installation
 d-i grub-installer/only_debian boolean true
 d-i grub-installer/with_other_os boolean false
+# FIX: Explicitly set the boot device to the primary disk to prevent prompting.
+d-i grub-installer/bootdev string /dev/sda
 
 ### 11. Initialize Final System
 d-i preseed/late_command string in-target wget -P /opt/ https://git.gppos.net/pos/debian/-/raw/master/setup.sh; in-target chmod +x /opt/setup.sh; in-target /opt/setup.sh
