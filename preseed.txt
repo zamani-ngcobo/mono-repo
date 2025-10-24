@@ -2,7 +2,8 @@
 # NB: 
 Bios Disable Other Boot Options to Force Boot from USB
 Bios Setting > Advanced > CSM Configuration > Other PCI devices [Legacy]
-### Localization
+
+### 1. Localization
 d-i debian-installer/locale string en_ZA.UTF-8
 d-i localechooser/languagelist select en
 d-i localechooser/continentlist select Africa
@@ -11,26 +12,35 @@ d-i debian-installer/country string ZA
 d-i keyboard-configuration/xkb-keymap select us
 d-i keyboard-configuration/layoutcode string us
 
-### Network configuration (FIXED)
-# Consolidated and corrected directives for reliable hostname/domain setup
+### 2. Critical Installation Control
+# Set priority to critical to suppress non-essential questions.
+d-i debconf/priority string critical
+# NEW: Forces the installer to pause at the network prompt, whether DHCP works or fails.
+d-i netcfg/dhcp_failed select Configure network manually
+d-i netcfg/dhcp_options select Configure network manually
+
+### 3. Network configuration (The section you want to control)
 d-i netcfg/get_hostname string gppos
 d-i netcfg/get_domain string gppos
 d-i netcfg/hostname string gppos
 d-i netcfg/domain string gppos
+# Note: The manual configuration prompt (due to 'Configure network manually') 
+# will pause the process, allowing you to inspect F2/F4/F5 consoles.
 
-### Account setup
+### 4. Account setup
 d-i passwd/root-password-crypted password $6$vGOLmlCw9.FMnLo$RqEZ9UFcrYTCqrsm.S2wqO7jZPh20JbsfSgC5O.qu7aMfSI478OE.4Ug6c8oS2BWuA7tFVXce7i4ChdQcZtdS1
 d-i passwd/user-fullname string user
 d-i passwd/username string user
 d-i passwd/user-password-crypted password $6$zIh7EvZC$ZKXhSGnD2WJGFD8qwjheQLEcTmYV45KtfBDwry16KU6oR5BBy9NqqQ4NbMdJ9BG.Cyw/JPfp56pdj9HMqVJp7.
 d-i passwd/auto-login boolean true
+d-i passwd/user-uid string 1000
 
-### Clock and time zone setup
+### 5. Clock and time zone setup
 d-i time/zone string Africa/Johannesburg
 d-i clock-setup/ntp boolean true
+d-i clock-setup/utc boolean true
 
-### Partitioning
-# The original partitioning scheme was maintained, using LVM on /dev/sda
+### 6. Partitioning
 d-i partman-auto/init_automatically_partition select biggest_free
 d-i partman-auto/disk string /dev/sda
 d-i partman-auto/method string lvm
@@ -50,29 +60,24 @@ d-i partman/choose_partition select finish
 d-i partman/confirm boolean true
 d-i partman/confirm_nooverwrite boolean true
 
-### Use local mirror (CRITICAL FIX: SWITCHED from HTTPS to HTTP)
+### 7. Use local mirror
 d-i mirror/http/hostname string http://mirror.hostafrica.co.za
 d-i mirror/http/directory string /debian
 
-### Apt setup
+### 8. Apt setup
 d-i apt-setup/services-select multiselect updates
 d-i apt-setup/non-free boolean true
 d-i apt-setup/contrib boolean false
 
-### Package selection (Guest Additions Included)
+### 9. Package selection
 popularity-contest popularity-contest/participate boolean false
 tasksel tasksel/first multiselect standard system utilities
 tasksel tasksel/desktop multiselect none
+d-i pkgsel/include string wget git sudo lshw gnome-core net-tools linux-perf zip
 
-# Added packages for Guest Additions (build-tools + VBox packages)
-d-i pkgsel/include string wget git sudo lshw gnome-core net-tools linux-perf zip \
-    build-essential dkms linux-headers-$(uname -r) virtualbox-guest-x11 virtualbox-guest-utils
-
-### Boot loader installation
+### 10. Boot loader installation
 d-i grub-installer/only_debian boolean true
 d-i grub-installer/with_other_os boolean false
-d-i grub-installer/bootdev string default
 
-### Initialize Final System
-# This runs your custom GPPOS setup script from the remote Git server
+### 11. Initialize Final System
 d-i preseed/late_command string in-target wget -P /opt/ https://git.gppos.net/pos/debian/-/raw/master/setup.sh; in-target chmod +x /opt/setup.sh; in-target /opt/setup.sh
